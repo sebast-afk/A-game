@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>One Piece Legends</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Three.js Canvas (always rendered behind everything) -->
+<canvas id="game-canvas"></canvas>
+
+<!-- Screen Flash Overlay -->
+<div id="screen-flash"></div>
+
+<!-- Floating damage text container -->
+<div id="floating-text-container"></div>
+
+<!-- Status notification -->
+<div id="status-notification"></div>
+
+<!-- Special announce banners -->
+<div id="special-announce" class="hidden"></div>
+<div id="ultimate-announce" class="hidden"></div>
+
+<!-- Combo counter -->
+<div id="combo-counter" class="hidden"></div>
+
+<!-- Effect indicators -->
+<div id="effect-indicators"></div>
+
+<!-- Counter attack indicator -->
+<div id="counter-indicator">COUNTER!</div>
+
+<!-- ============================
+     MAIN MENU
+============================= -->
+<div id="main-menu" class="screen active">
+  <div class="menu-bg-overlay"></div>
+  <div class="menu-content">
+    <div class="game-logo">
+      <div class="logo-jolly-roger">☠</div>
+      <h1 class="game-title">ONE PIECE</h1>
+      <h2 class="game-subtitle">LEGENDS</h2>
+      <div class="logo-divider"></div>
+    </div>
+    <div class="menu-buttons">
+      <button id="play-btn" class="menu-btn primary-btn">
+        <span class="btn-icon">⚔️</span>
+        <span>BATTLE</span>
+      </button>
+      <button id="training-btn" class="menu-btn secondary-btn">
+        <span class="btn-icon">🎯</span>
+        <span>TRAINING</span>
+      </button>
+      <button class="menu-btn secondary-btn" onclick="showCredits()">
+        <span class="btn-icon">📜</span>
+        <span>STORY</span>
+      </button>
+    </div>
+    <div class="menu-footer">
+      <div class="crew-preview">
+        <span class="crew-icon" style="color:#FF3333">⚔</span>
+        <span class="crew-icon" style="color:#22BB22">⚔</span>
+        <span class="crew-icon" style="color:#FF8800">⚡</span>
+        <span class="crew-icon" style="color:#DDDD00">⚡</span>
+        <span class="crew-icon" style="color:#6666FF">✦</span>
+      </div>
+      <p class="menu-tagline">Assemble your crew. Conquer the Grand Line.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     CHARACTER SELECT
+============================= -->
+<div id="character-select" class="screen" style="display:none">
+  <div class="screen-header">
+    <button id="back-to-menu" class="back-btn">← Back</button>
+    <h2 class="screen-title">ASSEMBLE YOUR CREW</h2>
+    <div class="select-count">
+      <span id="selected-count">0</span>/3
+    </div>
+  </div>
+
+  <!-- Team slots -->
+  <div class="team-preview">
+    <div class="team-slot" id="team-slot-0"><span style="color:#555">Empty</span></div>
+    <div class="team-slot" id="team-slot-1"><span style="color:#555">Empty</span></div>
+    <div class="team-slot" id="team-slot-2"><span style="color:#555">Empty</span></div>
+  </div>
+
+  <!-- Synergy display -->
+  <div id="synergy-display" class="synergy-bar">
+    <span class="synergy-label">Team Synergy: <span id="synergy-text">—</span></span>
+  </div>
+
+  <!-- Character grid -->
+  <div id="character-grid" class="character-grid"></div>
+
+  <!-- Ready button -->
+  <div class="ready-footer">
+    <button id="ready-btn" class="menu-btn primary-btn" disabled>
+      <span class="btn-icon">🏴‍☠️</span>
+      <span>SET SAIL!</span>
+    </button>
+  </div>
+</div>
+
+<!-- ============================
+     BATTLE SCREEN
+============================= -->
+<div id="battle-screen" class="screen" style="display:none">
+
+  <!-- TOP BAR: Team health & portraits -->
+  <div class="battle-top-bar">
+    <!-- Player team (left) -->
+    <div class="team-health-bar player-health-bar">
+      <div id="player-portraits" class="portraits-row"></div>
+    </div>
+
+    <!-- Center timer -->
+    <div class="battle-timer-container">
+      <div id="battle-timer" class="battle-timer">00:00</div>
+      <div class="timer-label">TIME</div>
+    </div>
+
+    <!-- Enemy team (right) -->
+    <div class="team-health-bar enemy-health-bar">
+      <div id="enemy-portraits" class="portraits-row enemy-row"></div>
+    </div>
+  </div>
+
+  <!-- MIDDLE: Switch buttons -->
+  <div id="switch-container" class="switch-container"></div>
+
+  <!-- Dodge button -->
+  <button id="dodge-btn" class="dodge-btn">
+    <div class="dodge-icon">💨</div>
+    <div class="dodge-label">VANISH</div>
+    <div class="dodge-gauge-container">
+      <div id="dodge-fill" class="dodge-fill" style="width:0%"></div>
+    </div>
+  </button>
+
+  <!-- Grand Rush button -->
+  <button id="grand-rush-btn" class="grand-rush-btn">
+    <div class="gr-title">GRAND</div>
+    <div class="gr-title gr-title-2">RUSH</div>
+    <div class="gr-meter-container">
+      <div id="grand-rush-fill" class="gr-fill" style="width:0%"></div>
+    </div>
+  </button>
+
+  <!-- BOTTOM: Stamina + Cards -->
+  <div class="bottom-hud">
+    <!-- Stamina bar -->
+    <div class="stamina-container">
+      <div class="stamina-label">
+        <span class="stamina-icon-big">⚡</span>
+        <span>STAMINA</span>
+        <span id="stamina-text" class="stamina-num">60</span>
+      </div>
+      <div class="stamina-bar">
+        <div id="stamina-fill" class="stamina-fill" style="width:60%"></div>
+        <div class="stamina-segments">
+          <div class="seg"></div><div class="seg"></div><div class="seg"></div>
+          <div class="seg"></div><div class="seg"></div><div class="seg"></div>
+          <div class="seg"></div><div class="seg"></div><div class="seg"></div>
+          <div class="seg"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Arts cards -->
+    <div id="cards-container" class="cards-container"></div>
+  </div>
+</div>
+
+<!-- ============================
+     BATTLE INTRO
+============================= -->
+<div id="battle-intro" style="display:none">
+  <div class="intro-backdrop"></div>
+  <div class="intro-content">
+    <div class="intro-player"></div>
+    <div class="intro-vs-text">VS</div>
+    <div class="intro-enemy"></div>
+  </div>
+</div>
+
+<!-- ============================
+     GRAND RUSH MODAL
+============================= -->
+<div id="grand-rush-modal" style="display:none">
+  <div class="grand-rush-overlay"></div>
+  <div class="grand-rush-panel">
+    <div class="gr-panel-title">☠ GRAND RUSH ☠</div>
+    <div class="gr-panel-subtitle">Choose your symbol!</div>
+    <div class="grand-rush-symbols"></div>
+    <div class="gr-panel-hint">Match the enemy's symbol to weaken the rush</div>
+  </div>
+</div>
+
+<!-- ============================
+     RESULT SCREEN
+============================= -->
+<div id="result-screen" class="screen" style="display:none">
+  <div class="result-bg"></div>
+  <div class="result-content">
+    <div id="result-title" class="result-title">VICTORY!</div>
+    <div id="result-subtitle" class="result-subtitle"></div>
+    <div id="result-stats" class="result-stats"></div>
+    <div class="result-buttons">
+      <button id="retry-btn" class="menu-btn primary-btn">
+        <span class="btn-icon">⚔️</span>
+        <span>BATTLE AGAIN</span>
+      </button>
+      <button id="menu-btn" class="menu-btn secondary-btn">
+        <span class="btn-icon">🏠</span>
+        <span>MAIN MENU</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="js/characters.js"></script>
+<script src="js/scene.js"></script>
+<script src="js/combat.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+<script>
+function showCredits() {
+  if (window.game) {
+    window.game.ui.showNotification({ text: 'Story Mode — Coming Soon!', color: '#FFD700' });
+  }
+}
+</script>
+</body>
+</html>
