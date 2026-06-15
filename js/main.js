@@ -931,6 +931,9 @@ class OnePieceLegends {
       if (card.type === 'special' || card.type === 'ultimate') {
         this.stats.specialsUsed++;
         this.missions.trackEvent('specials_used', 1);
+        if (this.gameScene && this.playerTeamData[this.activePlayerIdx]) {
+          this.gameScene.triggerAttackCinematic(this.playerTeamData[this.activePlayerIdx].id, card.type);
+        }
       }
       this.ui.updateHealthBar(enemyChar.id, enemyChar.currentHp, enemyChar.maxHp, false, this.activeEnemyIdx);
       this.ui.renderSwitchButtons(this.playerTeamData, this.activePlayerIdx, this.combat.switchCooldowns);

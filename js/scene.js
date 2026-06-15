@@ -853,4 +853,39 @@ class GameScene {
     });
     this.effects = [];
   }
+
+  triggerAttackCinematic(charId, artType) {
+    if (artType === 'ultimate') {
+      this.startCinematicMode('ultimate');
+      this.battleLight.intensity = 8;
+      this.battleLight.color.set(0xFF8800);
+      setTimeout(() => { if (this.battleLight) this.battleLight.intensity = 0; }, 800);
+      this.createUltimateEffect(this.baseEnemyPos, new THREE.Color('#FF4400'));
+      // Screen-edge flash via DOM
+      const flash = document.getElementById('screen-flash');
+      if (flash) {
+        flash.style.background = 'radial-gradient(ellipse at center, rgba(255,136,0,0.6) 0%, rgba(255,68,0,0.2) 60%, rgba(255,0,0,0) 100%)';
+        flash.style.opacity = '1';
+        flash.style.transition = 'opacity 0.1s';
+        setTimeout(() => {
+          if (flash) { flash.style.transition = 'opacity 0.6s'; flash.style.opacity = '0'; }
+        }, 150);
+      }
+    } else if (artType === 'special') {
+      this.startCinematicMode('special');
+      this.battleLight.intensity = 4;
+      this.battleLight.color.set(0xAA88FF);
+      setTimeout(() => { if (this.battleLight) this.battleLight.intensity = 0; }, 500);
+      // Lighter flash
+      const flash = document.getElementById('screen-flash');
+      if (flash) {
+        flash.style.background = 'rgba(100,100,255,0.25)';
+        flash.style.opacity = '1';
+        flash.style.transition = 'opacity 0.05s';
+        setTimeout(() => {
+          if (flash) { flash.style.transition = 'opacity 0.4s'; flash.style.opacity = '0'; }
+        }, 80);
+      }
+    }
+  }
 }

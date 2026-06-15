@@ -235,13 +235,16 @@ class UIManager {
         card.style.animationDelay = `${i * 0.12}s`;
         card.style.background = `linear-gradient(135deg, ${char.modelColor || '#222'}, #000)`;
         card.innerHTML = `
-          <div class="summon-card-rarity rarity-${result.rarity}">${result.rarity}</div>
-          <div class="summon-card-icon">${char.icon || '?'}</div>
+          <canvas class="summon-card-canvas" width="85" height="90"></canvas>
           <div class="summon-card-name">${char.name || result.id}</div>
           <div class="summon-card-sub">${char.title || ''}</div>
           ${result.isNew ? '<div class="summon-new-tag">NEW!</div>' : ''}
           ${result.isDuplicate ? '<div class="summon-dup-tag">+Fragment</div>' : ''}
         `;
+        const portrait = card.querySelector('.summon-card-canvas');
+        if (portrait && typeof CharacterPortraits !== 'undefined') {
+          CharacterPortraits.draw(portrait, result.id);
+        }
         container.appendChild(card);
       });
     }
@@ -290,14 +293,18 @@ class UIManager {
       card.className = 'crew-card';
       const stars = char.stars || 1;
       card.innerHTML = `
-        <div class="crew-card-portrait" style="background:linear-gradient(135deg,${char.modelColor || '#222'},#000)">
-          <div class="crew-card-icon">${char.icon || '?'}</div>
+        <div class="crew-card-portrait">
+          <canvas class="crew-portrait-canvas" width="80" height="80" data-char="${char.id}"></canvas>
           <div class="crew-card-rarity rarity-${char.rarity}">${char.rarity}</div>
         </div>
         <div class="crew-card-name">${char.name}</div>
         <div class="crew-card-stars">${'★'.repeat(stars)}${'☆'.repeat(7 - stars)}</div>
         <div class="crew-card-level">Lv.${char.level || 1}</div>
       `;
+      const crewCanvas = card.querySelector('.crew-portrait-canvas');
+      if (crewCanvas && typeof CharacterPortraits !== 'undefined') {
+        CharacterPortraits.draw(crewCanvas, char.id);
+      }
       card.addEventListener('click', () => onCharClick(char.id));
       grid.appendChild(card);
     });
@@ -360,7 +367,7 @@ class UIManager {
 
     content.innerHTML = `
       <div class="char-detail-header" style="background:linear-gradient(135deg,${charBase.modelColor || '#222'},#000)">
-        <div class="char-detail-icon">${charBase.icon || '?'}</div>
+        <canvas class="char-portrait-canvas" width="200" height="200"></canvas>
         <div class="char-detail-meta">
           <div class="char-detail-rarity rarity-${charBase.rarity}">${charBase.rarity}</div>
           <div class="char-detail-name">${charBase.name}</div>
@@ -401,6 +408,11 @@ class UIManager {
         <div class="medal-slots">${medalHTML}</div>
       </div>
     `;
+    // Draw large portrait canvas
+    const detailCanvas = content.querySelector('.char-portrait-canvas');
+    if (detailCanvas && typeof CharacterPortraits !== 'undefined') {
+      CharacterPortraits.draw(detailCanvas, charId);
+    }
   }
 
   // =================== Story Screen ===================
