@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>One Piece Legends</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<canvas id="game-canvas"></canvas>
+<div id="screen-flash"></div>
+<div id="floating-text-container"></div>
+<div id="status-notification"></div>
+<div id="special-announce" class="hidden"></div>
+<div id="ultimate-announce" class="hidden"></div>
+<div id="combo-counter" class="hidden"></div>
+<div id="effect-indicators"></div>
+<div id="counter-indicator">COUNTER!</div>
+
+<!-- ═══════════════════════════════════════
+     MAIN MENU
+════════════════════════════════════════ -->
+<div id="main-menu" class="screen active">
+  <div class="menu-bg-overlay"></div>
+  <div class="menu-content">
+    <div class="game-logo">
+      <div class="logo-jolly-roger">☠</div>
+      <h1 class="game-title">ONE PIECE</h1>
+      <h2 class="game-subtitle">LEGENDS</h2>
+      <div class="logo-divider"></div>
+    </div>
+
+    <!-- Gem + Resources Bar -->
+    <div class="resource-bar">
+      <div class="resource-chip gems-chip">
+        <span class="res-icon">💎</span>
+        <span id="menu-gems" class="res-val">3000</span>
+      </div>
+      <div class="resource-chip tickets-chip">
+        <span class="res-icon">🎫</span>
+        <span id="menu-tickets" class="res-val">10</span>
+      </div>
+    </div>
+
+    <!-- Navigation Grid -->
+    <div class="nav-grid">
+      <button class="nav-cell story-cell"    onclick="game.nav('story')">
+        <div class="nav-icon">📖</div><div class="nav-label">STORY</div>
+        <div class="nav-progress" id="nav-story-prog"></div>
+      </button>
+      <button class="nav-cell battle-cell"   onclick="game.nav('character-select')">
+        <div class="nav-icon">⚔️</div><div class="nav-label">BATTLE</div>
+      </button>
+      <button class="nav-cell pvp-cell"      onclick="game.nav('pvp')">
+        <div class="nav-icon">🏆</div><div class="nav-label">PvP</div>
+        <div class="nav-badge" id="nav-pvp-rank">Rookie</div>
+      </button>
+      <button class="nav-cell summon-cell"   onclick="game.nav('summons')">
+        <div class="nav-icon">🌟</div><div class="nav-label">SUMMONS</div>
+        <div class="nav-badge new-badge">NEW</div>
+      </button>
+      <button class="nav-cell crew-cell"     onclick="game.nav('crew')">
+        <div class="nav-icon">👥</div><div class="nav-label">CREW</div>
+      </button>
+      <button class="nav-cell missions-cell" onclick="game.nav('missions')">
+        <div class="nav-icon">📋</div><div class="nav-label">MISSIONS</div>
+        <div class="nav-badge" id="nav-mission-badge" style="display:none">!</div>
+      </button>
+      <button class="nav-cell events-cell"   onclick="game.nav('events')">
+        <div class="nav-icon">🎆</div><div class="nav-label">EVENTS</div>
+        <div class="nav-badge event-badge">6</div>
+      </button>
+      <button class="nav-cell shop-cell"     onclick="game.nav('shop')">
+        <div class="nav-icon">🛒</div><div class="nav-label">SHOP</div>
+      </button>
+    </div>
+
+    <!-- Login bonus notification -->
+    <div id="login-bonus-bar" class="login-banner hidden" onclick="game.showLoginBonus()">
+      <span class="login-icon">🎁</span>
+      <span class="login-text">Daily login bonus available!</span>
+      <span class="login-claim">CLAIM →</span>
+    </div>
+
+    <p class="menu-tagline">Season 1 · East Blue — The Adventure Begins</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     CHARACTER SELECT
+════════════════════════════════════════ -->
+<div id="character-select" class="screen" style="display:none">
+  <div class="screen-header">
+    <button class="back-btn" onclick="game.nav('main-menu')">← Back</button>
+    <h2 class="screen-title">ASSEMBLE YOUR CREW</h2>
+    <div class="select-count"><span id="selected-count">0</span>/3</div>
+  </div>
+  <div class="team-preview">
+    <div class="team-slot" id="team-slot-0"><span class="slot-empty">Empty</span></div>
+    <div class="team-slot" id="team-slot-1"><span class="slot-empty">Empty</span></div>
+    <div class="team-slot" id="team-slot-2"><span class="slot-empty">Empty</span></div>
+  </div>
+  <div id="synergy-display" class="synergy-bar">
+    <span id="synergy-text" class="synergy-text">Select characters to see synergies</span>
+  </div>
+  <div id="character-grid" class="character-grid"></div>
+  <div class="ready-footer">
+    <button id="ready-btn" class="menu-btn primary-btn" disabled>
+      <span class="btn-icon">🏴‍☠️</span><span>SET SAIL!</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     BATTLE SCREEN
+════════════════════════════════════════ -->
+<div id="battle-screen" class="screen" style="display:none">
+  <div class="battle-top-bar">
+    <div class="team-health-bar player-health-bar">
+      <div id="player-portraits" class="portraits-row"></div>
+    </div>
+    <div class="battle-timer-container">
+      <div id="battle-timer" class="battle-timer">00:00</div>
+      <div class="timer-label">TIME</div>
+    </div>
+    <div class="team-health-bar enemy-health-bar">
+      <div id="enemy-portraits" class="portraits-row enemy-row"></div>
+    </div>
+  </div>
+
+  <div id="switch-container" class="switch-container"></div>
+
+  <button id="dodge-btn" class="dodge-btn">
+    <div class="dodge-icon">💨</div>
+    <div class="dodge-label">VANISH</div>
+    <div class="dodge-gauge-container">
+      <div id="dodge-fill" class="dodge-fill" style="width:0%"></div>
+    </div>
+  </button>
+
+  <button id="grand-rush-btn" class="grand-rush-btn">
+    <div class="gr-title">GRAND</div>
+    <div class="gr-title gr-title-2">RUSH</div>
+    <div class="gr-meter-container">
+      <div id="grand-rush-fill" class="gr-fill" style="width:0%"></div>
+    </div>
+  </button>
+
+  <div class="bottom-hud">
+    <div class="stamina-container">
+      <div class="stamina-label">
+        <span class="stamina-icon-big">⚡</span>
+        <span>STAMINA</span>
+        <span id="stamina-text" class="stamina-num">60</span>
+      </div>
+      <div class="stamina-bar">
+        <div id="stamina-fill" class="stamina-fill" style="width:60%"></div>
+        <div class="stamina-segments">
+          <div class="seg"></div><div class="seg"></div><div class="seg"></div>
+          <div class="seg"></div><div class="seg"></div><div class="seg"></div>
+          <div class="seg"></div><div class="seg"></div><div class="seg"></div>
+          <div class="seg"></div>
+        </div>
+      </div>
+    </div>
+    <div id="cards-container" class="cards-container"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SUMMONS SCREEN
+════════════════════════════════════════ -->
+<div id="summons" class="screen" style="display:none">
+  <div class="screen-header">
+    <button class="back-btn" onclick="game.nav('main-menu')">← Back</button>
+    <h2 class="screen-title">RECRUITMENT</h2>
+    <div class="resource-chip gems-chip small-chip">
+      <span class="res-icon">💎</span><span id="summon-gems" class="res-val">0</span>
+    </div>
+  </div>
+
+  <div id="banner-list" class="banner-list"></div>
+</div>
+
+<!-- Banner Detail -->
+<div id="banner-detail" class="screen" style="display:none">
+  <div class="screen-header">
+    <button class="back-btn" onclick="game.nav('summons')">← Back</button>
+    <h2 class="screen-title" id="banner-detail-title">Banner</h2>
+    <div class="resource-chip gems-chip small-chip">
+      <span class="res-icon">💎</span><span id="banner-detail-gems" class="res-val">0</span>
+    </div>
+  </div>
+
+  <div id="banner-detail-content" class="banner-detail-content"></div>
+
+  <div class="summon-actions">
+    <button id="summon-1x-btn" class="menu-btn secondary-btn summon-btn">
+      <span class="btn-icon">🌊</span>
+      <span id="summon-1x-label">1x Summon (100 💎)</span>
+    </button>
+    <button id="summon-10x-btn" class="menu-btn primary-btn summon-btn">
+      <span class="btn-icon">🌟</span>
+      <span id="summon-10x-label">10x Summon (1000 💎)</span>
+    </button>
+  </div>
+
+  <!-- Step-up progress (shown only for step-up banners) -->
+  <div id="stepup-progress" class="stepup-progress hidden"></div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     CREW SCREEN
+════════════════════════════════════════ -->
+<div id="crew" class="screen" style="display:none">
+  <div class="screen-header">
+    <button class="back-btn" onclick="game.nav('main-menu')">← Back</button>
+    <h2 class="screen-title">MY CREW</h2>
+    <div class="crew-count">
+      <span id="crew-count-val">0</span> / <span id="crew-total-val">24</span>
+    </div>
+  </div>
+
+  <div class="crew-filter-bar">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="EX">EX</button>
+    <button class="filter-btn" data-filter="Legendary">Legendary</button>
+    <button class="filter-btn" data-filter="SSR">SSR</button>
+    <button class="filter-btn" data-filter="SR">SR</button>
+    <button class="filter-btn" data-filter="R">R</button>
+  </div>
+
+  <div id="crew-grid" class="crew-grid"></div>
+</div>
+
+<!-- Character Detail -->
+<div id="char-detail" class="screen" style="display:none">
+  <div class="screen-header">
+    <button class="back-btn" onclick="game.nav('crew')">← Back</button>
+    <h2 class="screen-title" id="char-detail-title">Character</h2>
+  </div>
+  <div id="char-detail-content" class="char-detail-content"></div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     STORY SCREEN
+════════════════════════════════════════ -->
+<div id="story" class="screen" style="display:none">
+  <div class="screen-header">
+    <button class="back-btn" onclick="game.nav('main-menu')">← Back</button>
+    <h2 class="screen-title">GRAND LINE SAGA</h2>
+  </div>
+  <div id="saga-list" class="saga-list"></div>
+</div>
+
+<!-- Chapter Select -->
+<div id="chapter-select" class="screen" style="display:none">
+  <div class="screen-header">
+    <button class="back-btn" onclick="game.nav('story')">← Back</button>
+    <h2 class="screen-title" id="chapter-select-title">Chapters</h2>
+  </div>
+  <div id="chapter-list" class="chapter-list"></div>
+</div>
+
+<!-- Story Battle Intro (dialogue) -->
+<div id="story-dialogue" class="screen" style="display:none">
+  <div class="dialogue-bg"></div>
+  <div class="dialogue-content">
+    <div class="dialogue-scene-label" id="dialogue-scene-label">Chapter 1</div>
+    <div class="dialogue-lines" id="dialogue-lines"></div>
+    <button class="menu-btn primary-btn" id="dialogue-next-btn">BATTLE →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PvP SCREEN
+════════════════════════════════════════ -->
+<div id="pvp" class="screen" style="display:none">
+  <div class="screen-header">
+    <button class="back-btn" onclick="game.nav('main-menu')">← Back</button>
+    <h2 class="screen-title">PvP RANKED</h2>
+  </div>
+  <div class="pvp-content">
+    <div class="pvp-rank-card" id="pvp-rank-card"></div>
+    <div class="pvp-stats-row" id="pvp-stats-row"></div>
+    <div class="pvp-leaderboard" id="pvp-leaderboard"></div>
+    <div class="pvp-actions">
+      <button class="menu-btn primary-btn" id="pvp-battle-btn" onclick="game.startPvPBattle()">
+        <span class="btn-icon">⚔️</span><span>FIND OPPONENT</span>
+      </button>
+      <button class="menu-btn secondary-btn" id="pvp-season-btn" onclick="game.claimSeasonRewards()">
+        <span class="btn-icon">🏆</span><span>SEASON REWARDS</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     MISSIONS SCREEN
+════════════════════════════════════════ -->
+<div id="missions" class="screen" style="display:none">
+  <div class="screen-header">
+    <button class="back-btn" onclick="game.nav('main-menu')">← Back</button>
+    <h2 class="screen-title">MISSIONS</h2>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="game.showMissionTab('daily',this)">DAILY</button>
+    <button class="tab-btn" onclick="game.showMissionTab('weekly',this)">WEEKLY</button>
+    <button class="tab-btn" onclick="game.showMissionTab('login',this)">LOGIN BONUS</button>
+  </div>
+  <div id="missions-daily"  class="mission-list tab-content active-tab"></div>
+  <div id="missions-weekly" class="mission-list tab-content"></div>
+  <div id="missions-login"  class="mission-list login-grid tab-content"></div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     EVENTS SCREEN
+════════════════════════════════════════ -->
+<div id="events" class="screen" style="display:none">
+  <div class="screen-header">
+    <button class="back-btn" onclick="game.nav('main-menu')">← Back</button>
+    <h2 class="screen-title">EVENTS</h2>
+  </div>
+  <div id="event-list" class="event-list"></div>
+</div>
+
+<!-- Event Detail -->
+<div id="event-detail" class="screen" style="display:none">
+  <div class="screen-header">
+    <button class="back-btn" onclick="game.nav('events')">← Back</button>
+    <h2 class="screen-title" id="event-detail-title">Event</h2>
+  </div>
+  <div id="event-detail-content" class="event-detail-content"></div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SHOP SCREEN
+════════════════════════════════════════ -->
+<div id="shop" class="screen" style="display:none">
+  <div class="screen-header">
+    <button class="back-btn" onclick="game.nav('main-menu')">← Back</button>
+    <h2 class="screen-title">SHOP</h2>
+    <div class="resource-chip gems-chip small-chip">
+      <span class="res-icon">💎</span><span id="shop-gems" class="res-val">0</span>
+    </div>
+  </div>
+  <div class="shop-content">
+    <div class="shop-section-title">Rainbow Gems</div>
+    <div class="shop-gem-grid">
+      <div class="shop-item" onclick="game.buyGems(60,'$0.99')">
+        <div class="shop-item-icon">💎</div>
+        <div class="shop-item-name">Starter Pack</div>
+        <div class="shop-item-amount">60 Gems</div>
+        <div class="shop-item-price">$0.99</div>
+      </div>
+      <div class="shop-item" onclick="game.buyGems(330,'$4.99')">
+        <div class="shop-item-icon">💎💎</div>
+        <div class="shop-item-name">Pirate Pack</div>
+        <div class="shop-item-amount">330 Gems</div>
+        <div class="shop-item-price">$4.99</div>
+        <div class="shop-item-bonus">+10% bonus</div>
+      </div>
+      <div class="shop-item best-value" onclick="game.buyGems(700,'$9.99')">
+        <div class="shop-best-tag">BEST VALUE</div>
+        <div class="shop-item-icon">💎💎💎</div>
+        <div class="shop-item-name">Captain Pack</div>
+        <div class="shop-item-amount">700 Gems</div>
+        <div class="shop-item-price">$9.99</div>
+        <div class="shop-item-bonus">+40% bonus</div>
+      </div>
+      <div class="shop-item" onclick="game.buyGems(1500,'$19.99')">
+        <div class="shop-item-icon">🌟</div>
+        <div class="shop-item-name">Yonko Pack</div>
+        <div class="shop-item-amount">1500 Gems</div>
+        <div class="shop-item-price">$19.99</div>
+        <div class="shop-item-bonus">+50% bonus</div>
+      </div>
+      <div class="shop-item" onclick="game.buyGems(3500,'$49.99')">
+        <div class="shop-item-icon">✨</div>
+        <div class="shop-item-name">Emperor Pack</div>
+        <div class="shop-item-amount">3500 Gems</div>
+        <div class="shop-item-price">$49.99</div>
+        <div class="shop-item-bonus">+75% bonus</div>
+      </div>
+      <div class="shop-item" onclick="game.buyGems(8000,'$99.99')">
+        <div class="shop-item-icon">☠️</div>
+        <div class="shop-item-name">Pirate King Pack</div>
+        <div class="shop-item-amount">8000 Gems</div>
+        <div class="shop-item-price">$99.99</div>
+        <div class="shop-item-bonus">+100% bonus</div>
+      </div>
+    </div>
+    <div class="shop-section-title" style="margin-top:20px">Free Daily Gems</div>
+    <div class="shop-free-row">
+      <button class="menu-btn secondary-btn" onclick="game.claimFreeGems()">
+        <span class="btn-icon">🎁</span><span>Daily 30 Gems (Free)</span>
+      </button>
+    </div>
+    <div class="shop-ftp-note">
+      Free-to-play players earn Rainbow Gems through story, missions, events, and PvP.
+      Featured characters always return. No exclusive pay-to-win content.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     BATTLE INTRO
+════════════════════════════════════════ -->
+<div id="battle-intro" style="display:none">
+  <div class="intro-backdrop"></div>
+  <div class="intro-content">
+    <div class="intro-player"></div>
+    <div class="intro-vs-text">VS</div>
+    <div class="intro-enemy"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     GRAND RUSH MODAL
+════════════════════════════════════════ -->
+<div id="grand-rush-modal" style="display:none">
+  <div class="grand-rush-overlay"></div>
+  <div class="grand-rush-panel">
+    <div class="gr-panel-title">☠ GRAND RUSH ☠</div>
+    <div class="gr-panel-subtitle">Choose your symbol!</div>
+    <div class="grand-rush-symbols"></div>
+    <div class="gr-panel-hint">Match the enemy's symbol to weaken the rush</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SUMMON ANIMATION OVERLAY
+════════════════════════════════════════ -->
+<div id="summon-overlay" style="display:none">
+  <!-- Ship Phase -->
+  <div id="summon-ship-phase" style="display:none">
+    <div id="summon-storm" class="summon-storm"></div>
+    <div class="summon-clouds">
+      <div class="s-cloud c1"></div>
+      <div class="s-cloud c2"></div>
+      <div class="s-cloud c3"></div>
+    </div>
+    <div class="summon-sea-waves">
+      <div class="s-wave w1"></div>
+      <div class="s-wave w2"></div>
+    </div>
+    <div id="summon-ship-icon" class="summon-ship-icon">⛵</div>
+    <div id="summon-rarity-hint" class="summon-rarity-hint"></div>
+    <div id="summon-flash" class="summon-flash"></div>
+  </div>
+
+  <!-- Card Reveal Phase -->
+  <div id="summon-card-phase" style="display:none">
+    <div class="summon-card-header">
+      <div class="summon-card-title">☠ CREW RECRUITED ☠</div>
+    </div>
+    <div id="summon-cards-container" class="summon-cards-container"></div>
+    <button id="summon-collect-btn" class="menu-btn primary-btn summon-collect" style="display:none">
+      COLLECT ALL
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     RESULT SCREEN
+════════════════════════════════════════ -->
+<div id="result-screen" class="screen" style="display:none">
+  <div class="result-bg"></div>
+  <div class="result-content">
+    <div id="result-title" class="result-title">VICTORY!</div>
+    <div id="result-subtitle" class="result-subtitle"></div>
+    <div id="result-stats" class="result-stats"></div>
+    <div class="result-buttons">
+      <button id="retry-btn" class="menu-btn primary-btn" onclick="game.startBattle()">
+        <span class="btn-icon">⚔️</span><span>BATTLE AGAIN</span>
+      </button>
+      <button class="menu-btn secondary-btn" onclick="game.nav('main-menu')">
+        <span class="btn-icon">🏠</span><span>MAIN MENU</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     LOGIN BONUS MODAL
+════════════════════════════════════════ -->
+<div id="login-bonus-modal" style="display:none">
+  <div class="modal-overlay" onclick="game.closeLoginBonus()"></div>
+  <div class="modal-panel login-bonus-panel">
+    <div class="modal-title">🎁 Daily Login Bonus</div>
+    <div class="login-calendar" id="login-calendar"></div>
+    <div class="login-today" id="login-today-reward"></div>
+    <div class="login-streak" id="login-streak"></div>
+    <button class="menu-btn primary-btn" id="login-claim-btn" onclick="game.claimLoginBonus()">
+      CLAIM TODAY'S REWARD
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     TOAST NOTIFICATION
+════════════════════════════════════════ -->
+<div id="toast-notification" class="toast-notification"></div>
+
+<!-- Scripts -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="js/characters_full.js"></script>
+<script src="js/savestate.js"></script>
+<script src="js/gacha.js"></script>
+<script src="js/progression.js"></script>
+<script src="js/story.js"></script>
+<script src="js/pvp.js"></script>
+<script src="js/missions.js"></script>
+<script src="js/events.js"></script>
+<script src="js/scene.js"></script>
+<script src="js/combat.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
