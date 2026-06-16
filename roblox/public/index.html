@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>RobloxClone</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+
+  <!-- ═══════════════ LOBBY ═══════════════ -->
+  <div id="lobby">
+    <div class="lobby-inner">
+      <div class="logo">
+        <span class="logo-r">R</span><span class="logo-text">oblox</span>
+        <span class="logo-tag">Clone</span>
+      </div>
+      <p class="tagline">Pick a game and jump in!</p>
+
+      <div class="username-row">
+        <input id="username-input" type="text" placeholder="Enter username..." maxlength="16" />
+      </div>
+
+      <div class="game-cards">
+
+        <div class="game-card" data-game="obby">
+          <div class="card-icon">⛩️</div>
+          <div class="card-title">Obby</div>
+          <div class="card-desc">Classic obstacle course. Jump, dodge, and reach the end!</div>
+          <button class="play-btn">Play</button>
+        </div>
+
+        <div class="game-card" data-game="tycoon">
+          <div class="card-icon">🏗️</div>
+          <div class="card-title">Tycoon</div>
+          <div class="card-desc">Claim a plot, build droppers, and earn money!</div>
+          <button class="play-btn">Play</button>
+        </div>
+
+        <div class="game-card" data-game="simulator">
+          <div class="card-icon">⛏️</div>
+          <div class="card-title">Mining Simulator</div>
+          <div class="card-desc">Chop trees, mine rocks, and upgrade your tools!</div>
+          <button class="play-btn">Play</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ LOADING ═══════════════ -->
+  <div id="loading" class="hidden">
+    <div class="spinner"></div>
+    <p class="loading-text">Loading…</p>
+  </div>
+
+  <!-- ═══════════════ GAME ═══════════════ -->
+  <div id="game-container" class="hidden">
+    <canvas id="game-canvas"></canvas>
+
+    <!-- HUD top-left -->
+    <div id="hud">
+      <div id="hud-game-name"></div>
+      <div id="hud-stats"></div>
+      <div id="player-count">Players: 1</div>
+    </div>
+
+    <!-- Leave button -->
+    <button id="leave-btn">← Leave</button>
+
+    <!-- Interact prompt -->
+    <div id="interact-prompt" class="hidden">Press <kbd>E</kbd> to interact</div>
+
+    <!-- Toast notifications -->
+    <div id="toast-container"></div>
+
+    <!-- Game-specific UI (shop, win screen, etc.) -->
+    <div id="game-ui"></div>
+
+    <!-- Mobile controls -->
+    <div id="mobile-controls">
+      <div id="joystick-zone">
+        <div id="joystick-bg">
+          <div id="joystick-dot"></div>
+        </div>
+      </div>
+      <button id="mobile-jump">JUMP</button>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
